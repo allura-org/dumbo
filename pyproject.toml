@@ -1,0 +1,20 @@
+[project]
+name = "dumbo"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = "<3.12, >=3.9"
+dependencies = [
+    "msgspec>=0.19.0",
+    "pyyaml>=6.0.2",
+    "simple-parsing>=0.1.7",
+    "torch>=2.7.1",
+    "unsloth>=2024.8",
+]
+
+[project.scripts]
+dumbo = "dumbo:real_main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
