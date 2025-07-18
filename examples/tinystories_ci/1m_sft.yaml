@@ -1,12 +1,22 @@
 model:
-    base_model: HuggingFaceTB/SmolLM2-135M
+    base_model: roneneldan/TinyStories-1M
+    tokenizer:
+        pad_token: "<|pad|>"
+        eos_token: "<|im_end|>"
+        bos_token: "<|im_start|>"
     liger:
         rope: true
         cross_entropy: false
         fused_linear_cross_entropy: true
         rms_norm: true
         swiglu: true
-        
+
+transformers:
+    trainer:
+      arguments:
+          batch_size: 16
+          physical_batch_size: 1 # grad acc is determined by batch size / ngpus / physical batch size
+          learning_rate: 1e-4
 
 datasets:
     - path: tatsu-lab/alpaca
@@ -20,16 +30,9 @@ datasets:
             {{ message.content }}<|im_end|>
             {% endfor %}
 
-trl:
-    trainer_type: sft # sft, dpo, ...
-    arguments:
-        batch_size: 16
-        physical_batch_size: 1 # grad acc is determined by batch size / ngpus / physical batch size
-        learning_rate: 1e-4
-
 plugins:
     - transformers
+    - transformers_trainer
     - liger
     - polars
     - jinja_formatter
-    - trl

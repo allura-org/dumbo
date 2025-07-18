@@ -63,12 +63,12 @@ class ModelPatcherPlugin(BasePlugin):
     def patch_model(self, model: Model, config: dict[str, Any]) -> Result[Model]:
         ...
 
-def import_plugin(name: str) -> Result[BasePlugin]:
+def import_plugin(name: str) -> Result[Any]:
     try:
         try:
-            module = import_module(name)
-        except ImportError:
             module = import_module(f"dumbo.plugins.{name}")
+        except ImportError:
+            module = import_module(name)
         logger.info(f"Successfully imported plugin `{name}`.")
         return Ok(module)
     except ImportError as e:
