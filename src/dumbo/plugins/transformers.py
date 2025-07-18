@@ -64,13 +64,6 @@ class TransformersTokenizerLoaderPlugin(TokenizerLoaderPlugin):
             if new_tokens:
                 tokenizer.add_special_tokens({"additional_special_tokens": new_tokens})
         
-        # Handle chat template
-        chat_template = tokenizer_config.get("chat_template")
-        if chat_template:
-            tokenizer.chat_template = chat_template
-        elif tokenizer.chat_template is None:
-            tokenizer.chat_template = "{{ content }}"
-        
         # Resize model embeddings if tokens were added
         new_vocab_size = len(tokenizer)
         if new_vocab_size > original_vocab_size and model is not None:
