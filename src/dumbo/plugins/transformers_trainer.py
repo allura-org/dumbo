@@ -2,7 +2,7 @@ from dumbo.plugin_loader import BasePlugin
 from dumbo.result import Result, Ok, Err
 from typing import Any, Dict
 from dumbo.logger import get_logger
-from transformers import Trainer, TrainingArguments, DataCollatorForLanguageModeling
+from transformers import Trainer, TrainingArguments, DataCollatorForLanguageModeling, TrainerCallback
 import torch
 
 logger = get_logger()

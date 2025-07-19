@@ -83,11 +83,81 @@ def main(args: Args) -> Result[None]:
         trainer = result.unwrap()
         break
     
+    # Initialize logging
+    logging_plugins = [p for p in plugins.values() if "logging" in p.provides]
+    for plugin in logging_plugins:
+        hooks = plugin.hooks()
+        if "log_init" in hooks:
+            result = hooks["log_init"](config.get(plugin.config_key, {}))
+            if is_err(result):
+                return result
+    
+    # Log model info
+    model_info = {
+        "model_type": str(type(model)),
+        "num_parameters": sum(p.numel() for p in model.parameters()),
+        "config": model.config.to_dict() if hasattr(model, 'config') else {}
+    }
+    for plugin in logging_plugins:
+        hooks = plugin.hooks()
+        if "log_model" in hooks:
+            result = hooks["log_model"](model_info)
+            if is_err(result):
+                return result
+    
+    # Log dataset info
+    if datasets:
+        dataset_info = {
+            "num_datasets": len(datasets),
+            "dataset_types": [str(type(d)) for d in datasets]
+        }
+        for plugin in logging_plugins:
+            hooks = plugin.hooks()
+            if "log_dataset" in hooks:
+                result = hooks["log_dataset"](dataset_info)
+                if is_err(result):
+                    return result
+    
+    # Log hyperparameters
+    for plugin in logging_plugins:
+        hooks = plugin.hooks()
+        if "log_hyperparameters" in hooks:
+            result = hooks["log_hyperparameters"](config)
+            if is_err(result):
+                return result
+    
+    # Log training start
+    for plugin in logging_plugins:
+        hooks = plugin.hooks()
+        if "log_training_start" in hooks:
+            result = hooks["log_training_start"](config)
+            if is_err(result):
+                return result
+    
     # Start training
     train_plugins = [p for p in plugins.values() if hasattr(p, 'train_model')]
     for plugin in train_plugins:
         result = plugin.train_model(trainer, config.get(plugin.config_key, {}))
+        if is_err(result):
+            return result
         break
+
+    # Log training completion
+    training_summary = {}  # Could be populated by trainer
+    for plugin in logging_plugins:
+        hooks = plugin.hooks()
+        if "log_training_end" in hooks:
+            result = hooks["log_training_end"](training_summary)
+            if is_err(result):
+                return result
+    
+    # Cleanup logging
+    for plugin in logging_plugins:
+        hooks = plugin.hooks()
+        if "finish" in hooks:
+            result = hooks["finish"]()
+            if is_err(result):
+                return result
 
     return Ok(None)
 
