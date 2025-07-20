@@ -8,14 +8,33 @@ dependencies = [
     "msgspec>=0.19.0",
     "pyyaml>=6.0.2",
     "simple-parsing>=0.1.7",
-    "torch>=2.7.1",
-    "unsloth>=2024.8",
+    "liger-kernel>=0.2.0",
+]
+
+[project.optional-dependencies]
+torch = [
+    "torch>=2.7.1"
+]
+huggingface = [
     "transformers>=4.40.0",
     "datasets>=2.19.0",
     "trl>=0.8.6",
+]
+polars = [
     "polars>=1.0.0",
+]
+jinja = [
     "jinja2>=3.1.0",
-    "liger-kernel>=0.2.0",
+]
+peft = [
+    "peft>=0.16.0"
+]
+default = [
+    "dumbo[torch]",
+    "dumbo[huggingface]",
+    "dumbo[polars]",
+    "dumbo[jinja]",
+    "dumbo[peft]"
 ]
 
 [project.scripts]
