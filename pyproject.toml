@@ -1,8 +1,8 @@
 [project]
 name = "dumbo"
 version = "0.0.1-rc"
-description = "Add your description here"
-readme = "README.md"
+description = "a modular-by-design llm (and more!) trainer"
+readme = "README.txt"
 requires-python = "<3.12, >=3.9"
 dependencies = [
     "msgspec>=0.19.0",
