@@ -48,7 +48,7 @@ class TransformersTrainerPlugin(BasePlugin):
                 logging_steps=10,
                 save_strategy="epoch",
                 eval_strategy="no",
-                report_to=None,
+                report_to="none",
                 remove_unused_columns=False,
                 **{k: v for k, v in train_args_config.items() if k not in ["batch_size", "physical_batch_size", "learning_rate", "num_epochs"]}
             )
@@ -83,6 +83,7 @@ class TransformersTrainerPlugin(BasePlugin):
                 args=training_args,
                 train_dataset=tokenized_dataset,
                 data_collator=data_collator,
+                callbacks=self._get_callbacks(model, tokenizer)
             )
             
             return Ok(trainer)
@@ -91,6 +92,21 @@ class TransformersTrainerPlugin(BasePlugin):
             logger.error(f"Failed to create trainer: {e}")
             return Err(e)
     
+    def _get_callbacks(self, model, tokenizer):
+        """Get list of callbacks including metrics adapter."""
+        callbacks = []
+        
+        # Add the metrics adapter callback
+        try:
+            from dumbo.plugins.transformers_trainer_metrics_adapter import get_trainer_metrics_callback
+            metrics_callback = get_trainer_metrics_callback()
+            callbacks.append(metrics_callback)
+            logger.info("Added metrics adapter callback to trainer")
+        except Exception as e:
+            logger.warning(f"Failed to add metrics adapter: {e}")
+        
+        return callbacks
+
     def train_model(self, trainer: Any, config: Dict[str, Any]) -> Result[Any]:
         try:
             trainer.train()

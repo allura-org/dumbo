@@ -3,13 +3,13 @@
 import os
 import json
 import time
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, List
 from dataclasses import dataclass
 
 import wandb
-
 from dumbo.result import Result, Ok
 from dumbo.plugin_loader import LoggingPlugin
+from dumbo.metrics import MetricsCollector, MetricEvent
 from dumbo.logger import get_logger
 
 logger = get_logger()
@@ -39,17 +39,79 @@ class WandbConfig:
     offline: bool = False
 
 
+class WandbMetricsCollector(MetricsCollector):
+    """Weights & Biases metrics collector."""
+    
+    def __init__(self, wandb_run: Any):
+        self.run = wandb_run
+        self._model_info_logged = False
+    
+    def log_metric(self, event: MetricEvent) -> None:
+        """Log a single metric event."""
+        if not self.run:
+            return
+        
+        try:
+            wandb.log({event.name: event.value}, step=event.step)
+        except Exception as e:
+            logger.error(f"Failed to log metric {event.name}: {e}")
+    
+    def log_metrics(self, events: List[MetricEvent]) -> None:
+        """Log multiple metric events."""
+        if not self.run:
+            return
+        
+        try:
+            metrics = {event.name: event.value for event in events}
+            step = events[0].step if events else 0
+            wandb.log(metrics, step=step)
+        except Exception as e:
+            logger.error(f"Failed to log metrics: {e}")
+    
+    def log_hyperparameters(self, params: Dict[str, Any]) -> None:
+        """Log hyperparameters."""
+        if not self.run:
+            return
+        
+        try:
+            wandb.config.update(params)
+        except Exception as e:
+            logger.error(f"Failed to log hyperparameters: {e}")
+    
+    def log_model_info(self, info: Dict[str, Any]) -> None:
+        """Log model information."""
+        if not self.run or self._model_info_logged:
+            return
+        
+        try:
+            wandb.log({"model_info": info})
+            self._model_info_logged = True
+        except Exception as e:
+            logger.error(f"Failed to log model info: {e}")
+    
+    def finalize(self) -> None:
+        """Finalize metrics collection."""
+        if not self.run:
+            return
+        
+        try:
+            wandb.finish()
+        except Exception as e:
+            logger.error(f"Failed to finalize wandb: {e}")
+
+
 class WandbLoggingPlugin(LoggingPlugin):
     """Weights & Biases logging plugin for Dumbo training framework."""
     
     config_key = "wandb"
-    provides = ["logging", "wandb_logging"]
+    provides = ["logging", "wandb_logging", "metrics_collector"]
     
     def __init__(self):
         super().__init__()
         self.config: Optional[WandbConfig] = None
         self.run: Optional[wandb.sdk.wandb_run.Run] = None
         self._step_counter = 0
+        self._collector: Optional[WandbMetricsCollector] = None
         
     def initialize(self, config: dict[str, Any]) -> Result[None]:
         """Initialize wandb logging system."""
@@ -216,6 +278,27 @@ class WandbLoggingPlugin(LoggingPlugin):
         except Exception as e:
             logger.error(f"Failed to finish wandb: {e}")
             return Ok(None)
+    
+    def get_metrics_collector(self) -> Result[Any]:
+        """Get a metrics collector instance."""
+        try:
+            if not self.run:
+                return Ok(None)
+            
+            if not self._collector:
+                self._collector = WandbMetricsCollector(self.run)
+            
+            return Ok(self._collector)
+        except Exception as e:
+            logger.error(f"Failed to create metrics collector: {e}")
+            return Ok(None)
+    
+    def hooks(self) -> Dict[str, Any]:
+        """Provide hooks for plugin system."""
+        return {
+            "log_init": self.initialize,
+            "metrics_collector": self.get_metrics_collector,
+        }
 
 
 # Available plugins for this module

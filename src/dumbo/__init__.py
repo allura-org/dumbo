@@ -3,11 +3,12 @@ from yaml import load, SafeLoader
 from dataclasses import dataclass
 from simple_parsing import field as simple_field, parse as simple_parse
 
-from .result import Result, Ok, is_err
+from .result import Result, Ok, is_err, is_ok
 from .logger import setup_root, get_logger
 from .plugin_loader import import_plugin
+from .metrics import get_metrics_registry
 
-logger = get_logger()
+logger = get_logger(level="DEBUG")
 
 @dataclass
 class Args:
@@ -29,6 +30,15 @@ def main(args: Args) -> Result[None]:
             for PluginClass in plugin_module.AVAILABLE_PLUGINS:
                 plugin_instance = PluginClass()
                 plugins[plugin_instance.__class__.__name__] = plugin_instance
+
+    # Initialize logging
+    logging_plugins = [p for p in plugins.values() if "logging" in p.provides]
+    for plugin in logging_plugins:
+        hooks = plugin.hooks()
+        if "log_init" in hooks:
+            result = hooks["log_init"](config.get(plugin.config_key, {}))
+            if is_err(result):
+                return result
 
     # Load model and tokenizer
     model = None
@@ -83,14 +93,31 @@ def main(args: Args) -> Result[None]:
         trainer = result.unwrap()
         break
     
-    # Initialize logging
-    logging_plugins = [p for p in plugins.values() if "logging" in p.provides]
-    for plugin in logging_plugins:
-        hooks = plugin.hooks()
-        if "log_init" in hooks:
-            result = hooks["log_init"](config.get(plugin.config_key, {}))
-            if is_err(result):
-                return result
+    # Initialize metrics registry and register collectors
+    registry = get_metrics_registry()
+    
+    # Register metrics collectors from plugins
+    for plugin_name, plugin in plugins.items():
+        if hasattr(plugin, 'get_metrics_collector'):
+            try:
+                collector_result = plugin.get_metrics_collector()
+                if is_ok(collector_result) and collector_result.value:
+                    registry.register(collector_result.value)
+                    logger.info(f"Registered metrics collector from plugin: {plugin_name}")
+            except Exception as e:
+                logger.warning(f"Failed to register collector from {plugin_name}: {e}")
+        
+        # Allow plugins to provide collectors via hooks
+        if hasattr(plugin, 'hooks'):
+            hooks = plugin.hooks()
+            if 'metrics_collector' in hooks:
+                try:
+                    collector = hooks['metrics_collector']()
+                    if collector:
+                        registry.register(collector)
+                        logger.info(f"Registered metrics collector via hook from plugin: {plugin_name}")
+                except Exception as e:
+                    logger.warning(f"Failed to register collector via hook from {plugin_name}: {e}")
     
     # Log model info
     model_info = {

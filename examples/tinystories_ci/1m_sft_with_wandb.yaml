@@ -17,6 +17,7 @@ transformers:
           batch_size: 16
           physical_batch_size: 1 # grad acc is determined by batch size / ngpus / physical batch size
           learning_rate: 1e-4
+          max_steps: 50
 
 wandb:
     project: "dumbo-training"
