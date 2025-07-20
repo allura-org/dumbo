@@ -95,7 +95,7 @@ class TransformersTrainerPlugin(BasePlugin):
         
         # Add the metrics adapter callback
         try:
-            from dumbo.plugins.transformers_trainer_metrics_adapter import get_trainer_metrics_callback
+            from dumbo.plugins.transformers_trainer.metrics_adapter import get_trainer_metrics_callback
             metrics_callback = get_trainer_metrics_callback()
             callbacks.append(metrics_callback)
             logger.info("Added metrics adapter callback to trainer")
