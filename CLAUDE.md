@@ -12,6 +12,7 @@ Dumbo is a modular training framework built on top of Transformers for fine-tuni
 - **Plugin System**: All functionality is provided through plugins loaded from `src/dumbo/plugins/`
 - **Configuration**: YAML-based configuration files define model, datasets, and training parameters
 - **Pipeline**: Model → Tokenizer → Dataset → Training → Output
+- **Metrics System**: Abstract metrics collection with registry pattern
 
 ### Plugin Types
 - **Model Loader**: Loads models (`transformers_model`, etc.)
@@ -20,6 +21,7 @@ Dumbo is a modular training framework built on top of Transformers for fine-tuni
 - **Dataset Loader**: Loads datasets (`polars`, etc.)
 - **Formatter**: Formats data for training (`jinja_formatter`, etc.)
 - **Trainer**: Creates training setup (`transformers_trainer`, etc.)
+- **Logging**: Integrated logging with metrics collection
 
 ## Usage
 
@@ -79,23 +81,33 @@ plugins:
 
 ## Plugin Development
 
-### Creating a Plugin
-1. Create file in `src/dumbo/plugins/`
-2. Inherit from appropriate base class (`ModelLoaderPlugin`, etc.)
-3. Implement required methods
-4. Add to `AVAILABLE_PLUGINS`
+### Plugin Base Classes
+All plugins inherit from `BasePlugin` and can implement specific interfaces:
+
+- `ModelLoaderPlugin`: `load_model(config)` method
+- `TokenizerLoaderPlugin`: `load_tokenizer(config, model=None)` method
+- `ModelPatcherPlugin`: `patch_model(model, config)` method
+- `LoggingPlugin`: Hook-based logging interface
 
 ### Plugin Loading Order
-1. Model loaded first
-2. Tokenizer loaded with model reference for embedding resizing
-3. Model patches applied
-4. Datasets loaded and formatted
-5. Trainer created
-6. Training executed
+1. **Model** loaded first
+2. **Tokenizer** loaded with model reference for embedding resizing
+3. **Model patches** applied
+4. **Datasets** loaded and formatted
+5. **Trainer** created
+6. **Training** executed
+7. **Metrics collectors** registered and used throughout
+
+### Metrics Integration
+Plugins can provide metrics collectors via:
+- `get_metrics_collector()` method returning `MetricsCollector` instance
+- Hook-based integration with `metrics_collector` hook
 
 ## Key Files
 - `src/dumbo/__init__.py`: Main entry point and orchestration
-- `src/dumbo/plugin_loader.py`: Plugin system base classes
-- `src/dumbo/plugins/transformers.py`: Model/tokenizer loading
-- `src/dumbo/plugins/transformers_trainer.py`: Training setup
+- `src/dumbo/plugin_loader.py`: Plugin system base classes and plugin loading
+- `src/dumbo/metrics.py`: Abstract metrics collection system with registry
+- `src/dumbo/plugins/transformers.py`: Model/tokenizer loading with embedding resizing
+- `src/dumbo/plugins/transformers_trainer.py`: Training setup and trainer creation
 - `src/dumbo/plugins/liger.py`: Liger kernel optimizations
+- `src/dumbo/plugins/wandb.py`: Weights & Biases logging with metrics collection

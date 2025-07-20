@@ -1,0 +1,50 @@
+model:
+  base_model: HuggingFaceTB/SmolLM2-135M
+  tokenizer:
+    pad_token: "<|pad|>"
+    eos_token: "<|im_end|>"
+
+liger:
+  rope: true
+  cross_entropy: false
+peft:
+  lora:
+    enabled: true
+    r: 16
+    lora_alpha: 32
+    lora_dropout: 0.1
+    bias: "none"
+    target_modules: "all-linear"
+
+datasets:
+  - path: tatsu-lab/alpaca
+    type: huggingface_polars
+    data_format: alpaca
+    train_format:
+      type: jinja_messages
+      template: |
+        {% for message in messages %}
+        {{ message.role }}{{ ": " }}{{ message.content }}{{ "\n" }}
+        {% endfor %}
+        {{ "assistant:" }}
+    validation_split: 0.1
+
+transformers:
+  trainer:
+    arguments:
+      batch_size: 16
+      physical_batch_size: 1
+      learning_rate: 1e-4
+      warmup_steps: 100
+      max_steps: 1000
+      save_steps: 1
+      eval_steps: 100
+      output_dir: "./output/smollm-lora"
+
+plugins:
+  - transformers
+  - transformers_trainer
+  - liger
+  - peft
+  - polars
+  - jinja_formatter

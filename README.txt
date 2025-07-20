@@ -13,10 +13,9 @@ for training llms.
 
 USAGE
 `dumbo config.yml` runs the train described in config.yml. see `examples/`
-for further examples of configuration files.
+for further (bad, vibe-configed) examples of configuration files.
 
 LIMITATIONS
-- no lora/etc (peft plugin soon!)
 - single gpu only (for now)
 - will only support fsdp even when multigpu is fully supported 
     (contributions welcome for deepspeed if you maintain it)

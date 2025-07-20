@@ -38,15 +38,12 @@ class TransformersTrainerPlugin(BasePlugin):
             num_epochs = int(train_args_config.get("num_epochs", 3))
             
             training_args = TrainingArguments(
-                output_dir="./output",
                 per_device_train_batch_size=physical_batch_size,
                 gradient_accumulation_steps=grad_accum_steps,
                 learning_rate=learning_rate,
                 num_train_epochs=num_epochs,
                 fp16=torch.cuda.is_available(),
                 bf16=torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8,
-                logging_steps=10,
-                save_strategy="epoch",
                 eval_strategy="no",
                 report_to="none",
                 remove_unused_columns=False,
