@@ -11,7 +11,16 @@
 dumbo is a modular-by-design machine learning program, originally created
 for training llms.
 
-============================================================================
+USAGE
+`dumbo config.yml` runs the train described in config.yml. see `examples/`
+for further examples of configuration files.
+
+LIMITATIONS
+- no lora/etc (peft plugin soon!)
+- single gpu only (for now)
+- will only support fsdp even when multigpu is fully supported 
+    (contributions welcome for deepspeed if you maintain it)
+
 ACKNOWLEDGEMENTS
 allura <3
 moonshot ai for creating kimi, the model that oneshot half of this codebase
