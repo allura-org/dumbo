@@ -15,10 +15,11 @@ USAGE
 `dumbo config.yml` runs the train described in config.yml. see `examples/`
 for further (bad, vibe-configed) examples of configuration files.
 
-LIMITATIONS
+LIMITATIONS / TODOS
 - single gpu only (for now)
 - will only support fsdp even when multigpu is fully supported 
     (contributions welcome for deepspeed if you maintain it)
+- no RL, online or offline (for now!)
 
 ACKNOWLEDGEMENTS
 allura <3
