@@ -16,6 +16,10 @@ USAGE
 for further (bad, vibe-configed) examples of configuration files.
 
 LIMITATIONS / TODOS
+- very unoptimized and some parts are untested (todo!!!)
+    - needs flash_attn model patch(?)
+    - needs cut cross entropy model patch
+    - needs quantization/qlora patch
 - single gpu only (for now)
 - will only support fsdp even when multigpu is fully supported 
     (contributions welcome for deepspeed if you maintain it)
