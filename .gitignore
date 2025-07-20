@@ -12,3 +12,4 @@ wheels/
 # Stuff
 output/
 wandb/
+*.swp

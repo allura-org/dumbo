@@ -1,0 +1,49 @@
+model:
+  base_model: unsloth/Llama-3.1-8B-Instruct
+
+liger:
+  rope: true
+  swiglu: true
+  rms_norm: true
+  cross_entropy: false
+  fused_linear_cross_entropy: true
+peft:
+  lora:
+    enabled: true
+    r: 16
+    lora_alpha: 32
+    lora_dropout: 0.1
+    bias: "none"
+    target_modules: "all-linear"
+
+datasets:
+  - path: allenai/tulu-3-hard-coded-10x
+    type: huggingface_polars
+    data_format: messages
+    train_format:
+      type: jinja_messages
+      template: |
+        {{ "<|finetune_right_pad_id|>"  }}{% for message in messages %}
+        {{ message.role }}{{ ": " }}{{ message.content }}{{ "\n" }}
+        {% endfor %}
+    validation_split: 0.1
+
+transformers:
+  trainer:
+    arguments:
+      batch_size: 16
+      physical_batch_size: 1
+      learning_rate: 1e-4
+      warmup_steps: 100
+      max_steps: 1000
+      save_steps: 1
+      eval_steps: 100
+      output_dir: "./output"
+
+plugins:
+  - transformers
+  - transformers_trainer
+  - liger
+  - peft
+  - polars
+  - jinja_formatter
