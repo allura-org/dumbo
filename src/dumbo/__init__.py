@@ -7,14 +7,39 @@ from .result import Result, Ok, is_err, is_ok
 from .logger import setup_root, get_logger
 from .plugin_loader import import_plugin
 from .metrics import get_metrics_registry
+from .__constants__ import __version__, __motd__
 
-logger = get_logger(level="DEBUG")
+logger = get_logger()
+
+# ascii art by joan stark <3
+art = """
+  __QQ  
+ (_)_"> 
+_)      """.split("\n") + [f"version {__version__}", __motd__]
+
+text = """
+▓█████▄  █    ██  ███▄ ▄███▓ ▄▄▄▄    ▒█████  
+▒██▀ ██▌ ██  ▓██▒▓██▒▀█▀ ██▒▓█████▄ ▒██▒  ██▒
+░██   █▌▓██  ▒██░▓██    ▓██░▒██▒ ▄██▒██░  ██▒
+░▓█▄   ▌▓▓█  ░██░▒██    ▒██ ▒██░█▀  ▒██   ██░
+░▒████▓ ▒▒█████▓ ▒██▒   ░██▒░▓█  ▀█▓░ ████▓▒░
+ ▒▒▓  ▒ ░▒▓▒ ▒ ▒ ░ ▒░   ░  ░░▒▓███▀▒░ ▒░▒░▒░ 
+ ░ ▒  ▒ ░░▒░ ░ ░ ░  ░      ░▒░▒   ░   ░ ▒ ▒░ 
+ ░ ░  ░  ░░░ ░ ░ ░      ░    ░    ░ ░ ░ ░ ▒  
+   ░       ░            ░    ░          ░ ░  """.split("\n")
 
 @dataclass
 class Args:
     config: str = simple_field(positional=True)
 
 def main(args: Args) -> Result[None]:
+    for idx, text_line in enumerate(text):
+        print(text_line, end=" ")
+        if dict(enumerate(art)).get(idx, None):
+            print(art[idx], end="")
+        print("")
+        
+
     config = load(open(args.config), Loader=SafeLoader)
     plugins = {}
     
