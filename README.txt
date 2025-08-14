@@ -25,8 +25,15 @@ LIMITATIONS / TODOS
     (contributions welcome for deepspeed if you maintain it)
 - no RL, online or offline (for now!)
 
+MOTIVATION
+dumbo was designed to absolve the sins of previous training harnesses
+and frameworks:
+- it is plugin-first and designed to be extensible
+    - all default features are implemented as plugins and can be
+      easily swapped out
+
 ACKNOWLEDGEMENTS
-allura <3
-moonshot ai for creating kimi, the model that oneshot half of this codebase
-anthropic for creating claude code, the harness that oneshot half of this
-    codebase
+- allura <3
+- moonshot ai for creating kimi, the model that oneshot half of this codebase
+- anthropic for creating claude code, the harness that oneshot half of this
+codebase
